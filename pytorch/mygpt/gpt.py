@@ -6,16 +6,16 @@ from torchtyping import TensorType
 
 class GPT(nn.Module):
 
-    def __init__(self, vocab_size: int, context_len: int, embedding_dim: int, attention_dim: int, num_blocks: int, num_heads: int):
+    def __init__(self, n_vocab: int, context_len: int, d_embed: int, d_atten: int, n_layers: int, n_heads: int):
         super().__init__()
-        self.token_embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.pos_embedding = nn.Embedding(context_len, embedding_dim)
+        self.token_embedding = nn.Embedding(n_vocab, d_embed)
+        self.pos_embedding = nn.Embedding(context_len, d_embed)
         self.blocks = nn.Sequential()
-        for _ in range(num_blocks):
+        for _ in range(n_layers):
             self.blocks.append(self.TransformerBlock(
-                embedding_dim, attention_dim, num_heads))
-        self.final_ln = nn.LayerNorm(embedding_dim)
-        self.final_projection = nn.Linear(embedding_dim, vocab_size)
+                d_embed, d_atten, n_heads))
+        self.final_ln = nn.LayerNorm(d_embed)
+        self.final_projection = nn.Linear(d_embed, n_vocab)
 
     def forward(self, context: TensorType[int]) -> TensorType[float]:
         token_embedded = self.token_embedding(context)
@@ -30,14 +30,14 @@ class GPT(nn.Module):
 
     class TransformerBlock(nn.Module):
 
-        def __init__(self, embedding_dim: int, attention_dim: int, num_heads: int):
+        def __init__(self, d_embed: int, d_atten: int, n_heads: int):
             super().__init__()
 
-            self.mha = self.MultiHeadAttention(embedding_dim,
-                                               attention_dim, num_heads)
-            self.ln1 = nn.LayerNorm(embedding_dim)
-            self.ln2 = nn.LayerNorm(embedding_dim)
-            self.ffn = self.MLPNet(embedding_dim)
+            self.mha = self.MultiHeadAttention(d_embed,
+                                               d_atten, n_heads)
+            self.ln1 = nn.LayerNorm(d_embed)
+            self.ln2 = nn.LayerNorm(d_embed)
+            self.ffn = self.MLPNet(d_embed)
 
         def forward(self, x: TensorType[float]) -> TensorType[float]:
             first_part = x + self.mha(self.ln1(x))
@@ -47,13 +47,13 @@ class GPT(nn.Module):
 
         class MultiHeadAttention(nn.Module):
 
-            def __init__(self, embedding_dim: int, attention_dim: int, num_heads: int):
+            def __init__(self, d_embed: int, d_atten: int, n_heads: int):
                 super().__init__()
 
                 self.heads = nn.ModuleList()
-                for _ in range(num_heads):
+                for _ in range(n_heads):
                     self.heads.append(self.SingleHeadAttention(
-                        embedding_dim, attention_dim//num_heads))
+                        d_embed, d_atten//n_heads))
 
             def forward(self, embedded: TensorType[float]) -> TensorType[float]:
                 # B, T, Head size >>> B, T, Attention dim
@@ -63,18 +63,18 @@ class GPT(nn.Module):
 
             class SingleHeadAttention(nn.Module):
 
-                def __init__(self, embedding_dim: int, attention_dim: int):
+                def __init__(self, d_embed: int, d_atten: int):
                     super().__init__()
 
                     self.get_keys = nn.Linear(
-                        embedding_dim, attention_dim, bias=False)
+                        d_embed, d_atten, bias=False)
                     self.get_queries = nn.Linear(
-                        embedding_dim, attention_dim, bias=False)
+                        d_embed, d_atten, bias=False)
                     self.get_values = nn.Linear(
-                        embedding_dim, attention_dim, bias=False)
+                        d_embed, d_atten, bias=False)
 
                 def forward(self, embedded: TensorType[float]) -> TensorType[float]:
-                    # (batch_size, seq_len, attention_dim)
+                    # (batch_size, seq_len, d_atten)
                     keys = self.get_keys(embedded)
                     queries = self.get_queries(embedded)
                     values = self.get_values(embedded)
@@ -94,14 +94,15 @@ class GPT(nn.Module):
 
         class MLPNet(nn.Module):
 
-            def __init__(self, embedding_dim: int):
+            def __init__(self, d_embed: int):
                 super().__init__()
 
+                # d_embed * 4 represents the number of neurons in the hidden layer
                 self.up_projection = nn.Linear(
-                    embedding_dim, embedding_dim * 4)
+                    d_embed, d_embed * 4)
                 self.relu = nn.ReLU()
                 self.down_projection = nn.Linear(
-                    embedding_dim * 4, embedding_dim)
+                    d_embed * 4, d_embed)
                 self.dropout = nn.Dropout(0.2)  # using p = 0.2
 
             def forward(self, x: TensorType[float]) -> TensorType[float]:
