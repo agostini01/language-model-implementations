@@ -1,0 +1,27 @@
+{
+    "name": "Python & PyTorch",
+    "build": {
+        "dockerfile": "Dockerfile",
+        // Add "context": ".." if your Dockerfile is in the .devcontainer folder
+        // and you need to access files in the project root
+        "context": ".",
+        // Uncomment the next line to use a specific Docker build image.
+        // "dockerBuildArgs": { "YOUR_BUILD_ARG": "YOUR_VALUE" }
+    },
+    // Set *default* container specific settings.json values on container create.
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    // Add the IDs of extensions you want installed when the container is created.
+    "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.autopep8"
+    ],
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [5000],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // "postCreateCommand": "pip install -r requirements.txt",
+    // Comment out the next line if you want to run as a non-root user. You can also specify a non-root user in the Dockerfile.
+    "remoteUser": "root"
+}
