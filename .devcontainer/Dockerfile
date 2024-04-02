@@ -10,4 +10,4 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev
 
 # Install Python dependencies
-RUN pip install --no-cache-dir torch torchvision torchaudio
+RUN pip install --no-cache-dir torch torchvision torchaudio torchtyping
