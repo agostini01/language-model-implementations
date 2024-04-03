@@ -2,8 +2,6 @@
     "name": "Python & PyTorch",
     "build": {
         "dockerfile": "Dockerfile",
-        // Add "context": ".." if your Dockerfile is in the .devcontainer folder
-        // and you need to access files in the project root
         "context": ".",
         // Uncomment the next line to use a specific Docker build image.
         // "dockerBuildArgs": { "YOUR_BUILD_ARG": "YOUR_VALUE" }
