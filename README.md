@@ -4,12 +4,7 @@ In order to explore the Language Model architecture with different frameworks,
 this project sets up the necessary development environment to implement the
 different architectures in different frameworks.
 
-Index:
-
-- [GPT Model Architecture with Self-Attention in PyTorch](pytorch/README.md)
-
-<!-- transform the above in a table with Architecture, Feature, Language/Framework, Link to readme, link to implementation -->
-
+## Navigation
 
 | Architecture and Feature | Language/Framework | Link to README | Link to Implementation |
 |--------------------------|--------------------|----------------|------------------------|
