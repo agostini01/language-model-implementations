@@ -1,90 +1,65 @@
 import unittest
 import torch
 
-from mygpt import SingleHeadAttention, MultiHeadAttention, TransformerBlock
+from mygpt.gpt import GPT
+from mygpt.runner import Solution
 
 
 class TestSingleHeadAttention(unittest.TestCase):
+    def test_single_head_attention(self):
+        # Define the input and the expected output
+        embedded = torch.tensor([
+            [[-1.4381, 0.1232],
+             [-0.1080, 0.3458]],
+            [[0.1929, -0.8567],
+             [-0.1160, 1.2547]]
+        ])
+        expected_output = torch.tensor([
+            [[-0.9737, 0.4302, -0.4216],
+             [-2.4031, 1.4092, 1.3797]],
+            [[1.7862, -2.1856, 0.2375],
+             [-0.7592, -0.1953, -0.4658]]
+        ])
 
-    def setUp(self):
-        self.embedding_dim = 128
-        self.attention_dim = 64
-        self.batch_size = 32
-        self.seq_len = 10
-        self.single_head_attention = SingleHeadAttention(
-            self.embedding_dim, self.attention_dim)
+        # Define the SingleHeadAttention instance
+        single_head_attention = GPT.TransformerBlock.MultiHeadAttention.SingleHeadAttention(
+            2, 3)
 
-    def test_forward(self):
-        # Create a random tensor to represent the embedded input
-        embedded = torch.randn(
-            self.batch_size, self.seq_len, self.embedding_dim)
-
-        # Run the forward pass
-        output = self.single_head_attention.forward(embedded)
-
-        # Check the output shape
-        self.assertEqual(output.shape, (self.batch_size,
-                         self.seq_len, self.attention_dim))
-
-        # Check the output values are rounded to 4 decimal places
-        rounded_output = torch.round(output, decimals=4)
-        self.assertTrue(torch.all(output.eq(rounded_output)))
+        # Call the forward method and check the output
+        output = single_head_attention(embedded)
+        self.assertTrue(torch.allclose(output, expected_output, atol=1e-4))
 
 
-class TestMultiHeadAttention(unittest.TestCase):
+class TestSolution(unittest.TestCase):
+    def test_generate(self):
+        # Define the mock model
+        class MockModel:
+            def __call__(self, context):
+                output = torch.tensor([
+                    [0.0000, 0.8000, 0.1000, 0.0000, 0.1000],
+                    [0.0000, 0.0000, 0.9000, 0.0000, 0.1000],
+                    [0.0500, 0.0000, 0.0000, 0.9500, 0.0000],
+                    [0.0000, 0.7000, 0.0000, 0.0000, 0.3000],
+                    [0.0000, 0.0000, 0.1000, 0.0000, 0.9000]
+                ])
+                return output.unsqueeze(0).unsqueeze(0)
 
-    def setUp(self):
-        self.embedding_dim = 128
-        self.attention_dim = 64
-        self.num_heads = 8
-        self.batch_size = 32
-        self.seq_len = 10
-        self.multi_head_attention = MultiHeadAttention(
-            self.embedding_dim, self.attention_dim, self.num_heads)
+        # Define the context and the expected output
+        # 'With', 'great', 'power', 'comes', 'great'
+        context = torch.tensor([[0, 1, 2, 3, 1]])
+        expected_output = 'great'
 
-    def test_forward(self):
-        # Create a random tensor to represent the embedded input
-        embedded = torch.randn(
-            self.batch_size, self.seq_len, self.embedding_dim)
+        # Define the Solution instance and the mock model
+        solution = Solution()
+        model = MockModel()
 
-        # Run the forward pass
-        output = self.multi_head_attention.forward(embedded)
+        # Define the int_to_char mapping
+        int_to_char = {0: 'with', 1: 'great',
+                       2: 'power', 3: 'comes', 4: 'responsibility'}
 
-        # Check the output shape
-        self.assertEqual(output.shape, (self.batch_size,
-                         self.seq_len, self.attention_dim))
-
-        # Check the output values are rounded to 4 decimal places
-        rounded_output = torch.round(output, decimals=4)
-        self.assertTrue(torch.all(output.eq(rounded_output)))
-
-
-class TestTransformerBlock(unittest.TestCase):
-
-    def setUp(self):
-        self.embedding_dim = 128
-        self.attention_dim = 64
-        self.num_heads = 8
-        self.batch_size = 32
-        self.seq_len = 10
-        self.transformer_block = TransformerBlock(
-            self.embedding_dim, self.attention_dim, self.num_heads)
-
-    def test_forward(self):
-        # Create a random tensor to represent the embedded input
-        embedded = torch.randn(
-            self.batch_size, self.seq_len, self.embedding_dim)
-
-        # Run the forward pass
-        output = self.transformer_block.forward(embedded)
-
-        # Check the output shape
-        self.assertEqual(output.shape, (self.batch_size,
-                         self.seq_len, self.embedding_dim))
-
-        # Check the output values are rounded to 4 decimal places
-        rounded_output = torch.round(output, decimals=4)
-        self.assertTrue(torch.all(output.eq(rounded_output)))
+        # Call the generate method and check the output
+        output = solution.generate(model, 1, context, 5, int_to_char)
+        self.assertEqual(output, expected_output)
 
 
 if __name__ == '__main__':
